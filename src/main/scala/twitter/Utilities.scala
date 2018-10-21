@@ -12,30 +12,30 @@ import java.util.Date
 import scala.util.parsing.json.{JSON, JSONObject}
 
 object Utilities {
-  
-  
-  val dtf:DateTimeFormatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss X uuuu", Locale.ENGLISH)
-  
+
+
+  val dtf: DateTimeFormatter = DateTimeFormatter.ofPattern("EEE MMM dd HH:mm:ss X uuuu", Locale.ENGLISH)
+
   // please enter your hadoop user path  - if necessary
-  val hadoopfs="hdfs://localhost:9000/user/hendrik/"
+  val hadoopfs = "hdfs://localhost:9000/user/hendrik/"
   val FILENAME_ACCESS_PATTERN ="""^(.+)\/(\w+\.\w+)$""".r
-     
-  def getData(filename:String, source:String, sc:SparkContext):RDD[String]={
+
+  def getData(filename: String, source: String, sc: SparkContext): RDD[String] = {
 
     if (source.equals("resources")) {
-      
-      val url= getClass.getResource("/"+filename).getPath
-      sc.textFile("file://"+url)
+
+      val url = getClass.getResource("/" + filename).getPath
+      sc.textFile("file://" + url)
     }
-    
-    else if (source.equals("hadoop-fs")){
-      
-      sc.textFile(hadoopfs+filename)    
+
+    else if (source.equals("hadoop-fs")) {
+
+      sc.textFile(hadoopfs + filename)
     }
     else null
   }
- 
-  
+
+
   /*
    * 
 {
@@ -84,12 +84,34 @@ object Utilities {
   index 3 (Type: String) - Language of the tweet
    */
 
-  def parse(line:String):List[Row]= ???
-  
-  def getTwitterDate(date:String):OffsetDateTime ={
-    
-    try{
-      OffsetDateTime.parse(date,dtf)
-    }catch{ case e:Exception=> {println(date); OffsetDateTime.now}}
+  def parse(line: String): List[Row] = {
+
+    val details = JSON.parseFull(line)
+
+    details match {
+      case Some(m) =>
+        val map = m.asInstanceOf[Map[String, Any]]
+
+        (map.get("created_at"), map.get("user"), map.get("text"), map.get("lang")) match {
+          case (Some(data: String),
+          Some(user: Map[String, Any]),
+          Some(text: String),
+          Some(lang: String)) =>
+            List(Row(getTwitterDate(data), user.getOrElse("name", ""), text, lang))
+          case _ => List()
+        }
+      case None => List()
+    }
+  }
+
+  def getTwitterDate(date: String): OffsetDateTime = {
+
+    try {
+      OffsetDateTime.parse(date, dtf)
+    } catch {
+      case e: Exception => {
+        println(date); OffsetDateTime.now
+      }
+    }
   }
 }

@@ -45,6 +45,8 @@ class ParsingTest extends FunSuite with BeforeAndAfterAll{
     val tweet="{\"created_at\":\"Sun Sep 21 15:05:39 +0000 2014\",\"id\":513705624245653505,\"id_str\":\"513705624245653505\",\"text\":\"This is a tweet\",\"truncated\":false,\"user\":{\"id\":2533019970,\"name\":\"donald\"},\"lang\":\"en\"}"
       
     val res= Utilities.parse(tweet)
+
+
     assert(res.head.get(0).asInstanceOf[OffsetDateTime].toString===("2014-09-21T15:05:39Z"))
     assert(res.head.getString(1)===("donald"))
     assert(res.head.getString(2)===("This is a tweet"))
@@ -53,13 +55,17 @@ class ParsingTest extends FunSuite with BeforeAndAfterAll{
   }
 
   test("Parse All"){
-    
+
+
+
      val onlyTweets= twitterData.flatMap(x=>{Utilities.parse(x)}).cache
- 
+
     assert(twitterData.count===21326)
+
     assert(onlyTweets.count===17570)
 
-/*    
+
+/*
     //val onlyTweets2= twitterData.flatMap(x=>{println(x);Utilities.parse(x)}).cache
     
      val data= twitterData.flatMap(x=>{Utilities.parse(x)}).cache
